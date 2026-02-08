@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gwendy's Flashbooth</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+        }
+
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .brand-logo {
+            font-size: 3rem;
+            font-weight: bold;
+            font-family: 'Dancing Script', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .layout-option {
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .layout-option:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .layout-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .layout-visual {
+            width: 100%;
+            max-width: 120px;
+            height: 200px;
+            margin: 15px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .layout-visual-box {
+            background: #667eea;
+            border-radius: 5px;
+        }
+
+        .layout-1 .layout-visual {
+            max-width: 100px;
+        }
+
+        .layout-1 .layout-visual-box {
+            width: 100%;
+            height: calc(33.33% - 3.33px);
+        }
+
+        .layout-2 .layout-visual {
+            max-width: 160px;
+        }
+
+        .layout-2 .layout-visual-box {
+            width: calc(50% - 2.5px);
+            height: calc(50% - 2.5px);
+        }
+
+        .color-option {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            cursor: pointer;
+            border: 3px solid #e0e0e0;
+            transition: all 0.3s;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .color-option.selected {
+            border-color: #667eea;
+            border-width: 4px;
+        }
+
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #video {
+            width: 100%;
+            display: block;
+        }
+
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: none;
+        }
+
+        .photo-grid {
+            display: grid;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .photo-grid.layout-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .photo-grid.layout-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .photo-slot {
+            position: relative;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-slot .placeholder {
+            font-size: 3rem;
+            color: #ccc;
+        }
+
+        .photo-slot .retake-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        .photo-slot:hover .retake-btn {
+            display: block;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        #finalPreview {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-4 {
+            margin-bottom: 1.5rem;
+        }
+
+        .mt-4 {
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .brand-logo {
+                font-size: 2rem;
+            }
+            
+            .screen {
+                padding: 20px;
+            }
+
+            #countdown {
+                font-size: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <div class="brand-logo">📸 Gwendy's Flashbooth</div>
+            <div class="text-center">
+                <p class="lead mb-4">Create amazing photo strips in seconds!</p>
+                <button class="btn btn-primary" onclick="showLayoutScreen()">Click Start</button>
+            </div>
+        </div>
+
+        <!-- Layout Selection Screen -->
+        <div id="layoutScreen" class="screen">
+            <h2 class="text-center mb-4">Choose Your Layout</h2>
+            
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="layout-option layout-1" onclick="selectLayout(1)">
+                        <h4>Layout 1</h4>
+                        <div class="layout-visual">
+                            <div class="layout-visual-box"></div>
+                            <div class="layout-visual-box"></div>
+                            <div class="layout-visual-box"></div>
+                        </div>
+                        <p>2 × 6 inches<br>3 Photo Strips</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="layout-option layout-2" onclick="selectLayout(2)">
+                        <h4>Layout 2</h4>
+                        <div class="layout-visual">
+                            <div class="layout-visual-box"></div>
+                            <div class="layout-visual-box"></div>
+                            <div class="layout-visual-box"></div>
+                            <div class="layout-visual-box"></div>
+                        </div>
+                        <p>4 × 6 inches<br>4 Photo Strips</p>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="text-center mb-3">Choose Background Color</h4>
+            <div class="text-center mb-4">
+                <div class="color-option" style="background: white; border-color: #ccc;" onclick="selectColor('white')" data-color="white"></div>
+                <div class="color-option" style="background: black;" onclick="selectColor('black')" data-color="black"></div>
+                <div class="color-option" style="background: #4A90E2;" onclick="selectColor('blue')" data-color="blue"></div>
+                <div class="color-option" style="background: #FFF9C4;" onclick="selectColor('yellow')" data-color="yellow"></div>
+            </div>
+
+            <div class="text-center">
+                <button class="btn btn-primary" onclick="startCamera()" id="continueBtn" disabled>Continue to Camera</button>
+            </div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div id="cameraScreen" class="screen">
+            <h2 class="text-center mb-4">Smile! 📸</h2>
+            <div class="progress-indicator" id="progressText">Photo 1 of <span id="totalPhotos">3</span></div>
+            
+            <div id="videoContainer">
+                <video id="video" autoplay playsinline></video>
+                <div id="countdown"></div>
+            </div>
+
+            <div class="photo-grid layout-1" id="photoGrid">
+                <!-- Photo slots will be added dynamically -->
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-secondary me-2" onclick="cancelSession()">Cancel</button>
+                <button class="btn btn-primary" onclick="completePhotos()" id="completeBtn" style="display: none;">Complete & Preview</button>
+            </div>
+        </div>
+
+        <!-- Final Preview Screen -->
+        <div id="previewScreen" class="screen">
+            <h2 class="text-center mb-4">Your Photo Strip is Ready! 🎉</h2>
+            
+            <img id="finalPreview" alt="Photo Strip Preview">
+
+            <div class="text-center mt-4">
+                <button class="btn btn-secondary me-2" onclick="startOver()">Start Over</button>
+                <button class="btn btn-primary" onclick="downloadPhoto()">Download Photo Strip</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        let selectedLayout = 0;
+        let selectedColor = '';
+        let photoCount = 0;
+        let currentPhotoIndex = 0;
+        let capturedPhotos = [];
+        let stream = null;
+        let isCountingDown = false;
+
+        const layoutConfig = {
+            1: { width: 1652, height: 4920, photos: 3, name: '2x6' },
+            2: { width: 1200, height: 1800, photos: 4, name: '4x6' }
+        };
+
+        const colorConfig = {
+            'white': '#FFFFFF',
+            'black': '#000000',
+            'blue': '#4A90E2',
+            'yellow': '#FFF9C4'
+        };
+
+        function showLayoutScreen() {
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('layoutScreen').classList.add('active');
+        }
+
+        function selectLayout(layout) {
+            selectedLayout = layout;
+            document.querySelectorAll('.layout-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.layout-option.layout-${layout}`).classList.add('selected');
+            photoCount = layoutConfig[layout].photos;
+            updateContinueButton();
+        }
+
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.color-option[data-color="${color}"]`).classList.add('selected');
+            updateContinueButton();
+        }
+
+        function updateContinueButton() {
+            document.getElementById('continueBtn').disabled = !(selectedLayout && selectedColor);
+        }
+
+        async function startCamera() {
+            if (!selectedLayout || !selectedColor) return;
+
+            document.getElementById('layoutScreen').classList.remove('active');
+            document.getElementById('cameraScreen').classList.add('active');
+
+            // Setup photo grid
+            const grid = document.getElementById('photoGrid');
+            grid.className = `photo-grid layout-${selectedLayout}`;
+            grid.innerHTML = '';
+            capturedPhotos = [];
+
+            document.getElementById('totalPhotos').textContent = photoCount;
+
+            for (let i = 0; i < photoCount; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'photo-slot';
+                slot.innerHTML = `
+                    <div class="placeholder">📷</div>
+                    <button class="retake-btn" onclick="retakePhoto(${i})">Retake</button>
+                `;
+                grid.appendChild(slot);
+                capturedPhotos.push(null);
+            }
+
+            // Start camera
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    } 
+                });
+                document.getElementById('video').srcObject = stream;
+                
+                // Start capturing photos
+                setTimeout(() => captureNextPhoto(), 1000);
+            } catch (err) {
+                alert('Camera access denied. Please allow camera permissions and try again.');
+                console.error('Camera error:', err);
+            }
+        }
+
+        function captureNextPhoto() {
+            if (isCountingDown) return;
+            
+            currentPhotoIndex = capturedPhotos.findIndex(p => p === null);
+            if (currentPhotoIndex === -1) {
+                showCompleteButton();
+                return;
+            }
+
+            document.getElementById('progressText').textContent = 
+                `Photo ${currentPhotoIndex + 1} of ${photoCount}`;
+
+            startCountdown();
+        }
+
+        function startCountdown() {
+            isCountingDown = true;
+            const countdownEl = document.getElementById('countdown');
+            let count = 3;
+
+            countdownEl.style.display = 'block';
+            countdownEl.textContent = count;
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownEl.textContent = count;
+                } else {
+                    countdownEl.textContent = '📸';
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        countdownEl.style.display = 'none';
+                        capturePhoto(currentPhotoIndex);
+                        isCountingDown = false;
+                        
+                        // Auto-capture next photo after 1.5 seconds
+                        setTimeout(() => captureNextPhoto(), 1500);
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function capturePhoto(index) {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+
+            const photoData = canvas.toDataURL('image/png');
+            capturedPhotos[index] = photoData;
+
+            // Update UI
+            const slots = document.querySelectorAll('.photo-slot');
+            slots[index].innerHTML = `
+                <img src="${photoData}" alt="Photo ${index + 1}">
+                <button class="retake-btn" onclick="retakePhoto(${index})">Retake</button>
+            `;
+        }
+
+        function retakePhoto(index) {
+            if (isCountingDown) return;
+            
+            capturedPhotos[index] = null;
+            const slots = document.querySelectorAll('.photo-slot');
+            slots[index].innerHTML = `
+                <div class="placeholder">📷</div>
+                <button class="retake-btn" onclick="retakePhoto(${index})">Retake</button>
+            `;
+            
+            document.getElementById('completeBtn').style.display = 'none';
+            currentPhotoIndex = index;
+            
+            setTimeout(() => captureNextPhoto(), 500);
+        }
+
+        function showCompleteButton() {
+            document.getElementById('completeBtn').style.display = 'inline-block';
+            document.getElementById('progressText').textContent = 'All photos captured! ✨';
+        }
+
+        function completePhotos() {
+            if (capturedPhotos.some(p => p === null)) {
+                alert('Please capture all photos first!');
+                return;
+            }
+
+            // Stop camera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            generateFinalImage();
+        }
+
+        function generateFinalImage() {
+            const config = layoutConfig[selectedLayout];
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size (300 DPI equivalent)
+            canvas.width = config.width;
+            canvas.height = config.height;
+
+            // Fill background
+            ctx.fillStyle = colorConfig[selectedColor];
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Calculate photo dimensions and positions
+            // Scale padding based on layout
+            const padding = selectedLayout === 1 ? 80 : 30; // Higher padding for larger resolution
+            const topPadding = selectedLayout === 1 ? 100 : 40;
+            const bottomSpace = selectedLayout === 1 ? 480 : 180; // More space for text at bottom
+            const photoGap = selectedLayout === 1 ? 40 : 15; // Larger gap between photos
+            
+            const availableHeight = canvas.height - topPadding - bottomSpace;
+            
+            let photoWidth, photoHeight, cols, rows;
+
+            if (selectedLayout === 1) {
+                // Layout 1: 2x6 inches - 3 photos vertically (1652x4920)
+                cols = 1;
+                rows = 3;
+                photoWidth = canvas.width - (padding * 2);
+                photoHeight = (availableHeight - (photoGap * 2)) / 3;
+            } else {
+                // Layout 2: 4x6 inches - 4 photos in 2x2 grid
+                cols = 2;
+                rows = 2;
+                photoWidth = (canvas.width - (padding * 3)) / 2;
+                photoHeight = (availableHeight - photoGap) / 2;
+            }
+
+            // Load and draw photos
+            let loadedImages = 0;
+            const images = [];
+
+            capturedPhotos.forEach((photoData, index) => {
+                const img = new Image();
+                img.onload = () => {
+                    images[index] = img;
+                    loadedImages++;
+
+                    if (loadedImages === capturedPhotos.length) {
+                        // Draw all photos
+                        images.forEach((img, i) => {
+                            const row = Math.floor(i / cols);
+                            const col = i % cols;
+                            
+                            let x, y;
+                            if (selectedLayout === 1) {
+                                // Single column - center horizontally
+                                x = padding;
+                                y = topPadding + (row * (photoHeight + photoGap));
+                            } else {
+                                // 2x2 grid
+                                x = padding + (col * (photoWidth + padding));
+                                y = topPadding + (row * (photoHeight + photoGap));
+                            }
+
+                            // Draw photo with aspect ratio maintained (cover mode)
+                            const scale = Math.max(photoWidth / img.width, photoHeight / img.height);
+                            const scaledWidth = img.width * scale;
+                            const scaledHeight = img.height * scale;
+                            const offsetX = (photoWidth - scaledWidth) / 2;
+                            const offsetY = (photoHeight - scaledHeight) / 2;
+
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.rect(x, y, photoWidth, photoHeight);
+                            ctx.clip();
+                            ctx.drawImage(img, x + offsetX, y + offsetY, scaledWidth, scaledHeight);
+                            ctx.restore();
+                        });
+
+                        // Add brand name and date
+                        const textStartY = canvas.height - bottomSpace + 160;
+                        
+                        // Set text color based on background
+                        ctx.fillStyle = selectedColor === 'white' || selectedColor === 'yellow' ? '#333333' : '#FFFFFF';
+                        
+                        // Brand name in cursive style - scaled for higher resolution
+                        const brandFontSize = selectedLayout === 1 ? 100 : 48;
+                        ctx.font = `italic bold ${brandFontSize}px Georgia, serif`;
+                        ctx.textAlign = 'center';
+                        ctx.fillText("Gwendy's Flashbooth", canvas.width / 2, textStartY);
+
+                        // Add date below
+                        const today = new Date();
+                        const dateStr = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}-${String(today.getFullYear()).slice(-2)}`;
+                        const dateFontSize = selectedLayout === 1 ? 56 : 24;
+                        ctx.font = `${dateFontSize}px Arial, sans-serif`;
+                        ctx.fillText(dateStr, canvas.width / 2, textStartY + 100);
+
+                        // Show preview
+                        const finalImage = canvas.toDataURL('image/jpeg', 0.95);
+                        document.getElementById('finalPreview').src = finalImage;
+                        document.getElementById('cameraScreen').classList.remove('active');
+                        document.getElementById('previewScreen').classList.add('active');
+                    }
+                };
+                img.src = photoData;
+            });
+        }
+
+        function downloadPhoto() {
+            const link = document.createElement('a');
+            const today = new Date();
+            const timestamp = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}_${String(today.getHours()).padStart(2, '0')}${String(today.getMinutes()).padStart(2, '0')}`;
+            link.download = `photobooth_${layoutConfig[selectedLayout].name}_${timestamp}.jpg`;
+            link.href = document.getElementById('finalPreview').src;
+            link.click();
+        }
+
+        function cancelSession() {
+            if (confirm('Are you sure you want to cancel? Your photos will be lost.')) {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                startOver();
+            }
+        }
+
+        function startOver() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            selectedLayout = 0;
+            selectedColor = '';
+            currentPhotoIndex = 0;
+            capturedPhotos = [];
+            
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById('startScreen').classList.add('active');
+            
+            document.querySelectorAll('.layout-option').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('continueBtn').disabled = true;
+        }
+    </script>
+</body>
+</html>
